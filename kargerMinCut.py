@@ -22,7 +22,6 @@ class Graph(object):
                 raise ValueError
             self.vertex[u].append(v)
         except ValueError:
-            print("Unknown vertex! Adding vertex first")
             self.add_vertex(u)
             self.vertex[u].append(v)
 
