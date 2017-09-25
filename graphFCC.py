@@ -13,12 +13,8 @@ import os
 
 from kargerMinCut import Graph
 # setting some finite recursion limit size
-# resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
-
-# resource.setrlimit(resource.RLIMIT_STACK, [0x10000000, resource.RLIM_INFINITY])
-# sys.setrecursionlimit(0x100000)
-# setting recursion limit to infinity, requires root! can cause stack overflow!
-# resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+# setting recursion limit to infinity, can cause stack overflow!
+resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
 
 class DirectedGraph(Graph):
@@ -104,14 +100,11 @@ class DirectedGraph(Graph):
         # TODO: compute 5 SCC
         # you ned to run kosaraju algorithm first
         if not self._kosaraju_used:
-            print("use kosaraju")
+            print("using kosaraju")
             self.kosaraju()
-        ffc = []
         ffc_num = [0] * (len(self.vertex)+1)
         for i in list(self.ld.keys()):
             ffc_num[self.ld[i]] += 1
-            if self.ld[i] not in ffc:
-                ffc.append(self.ld[i])
         ffc_num = sorted(ffc_num)
         ffc_num.reverse()
         return ffc_num[:5]
@@ -154,10 +147,8 @@ if __name__ == "__main__":
     graph2 = DirectedGraph()
     graph2.readGraphFromFile('./data/SCC.txt')
     s_t = time.time()
-    sys.setrecursionlimit(2 ** 15)
-    threading.stack_size(67108864)
-    thread = threading.Thread(target=graph2.kosaraju())
-    thread.start()
+    sys.setrecursionlimit(2 ** 16)
+    graph2.kosaraju()
     print("Number of fully connected componets is: ", graph2.scc())
     print("Execution time: %.3f seconds" % (time.time() - s_t))
 
