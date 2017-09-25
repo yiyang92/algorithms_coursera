@@ -10,9 +10,14 @@ import sys
 import resource
 import os
 
-sys.setrecursionlimit(2 ** 30)
-
 from kargerMinCut import Graph
+# setting some finite recursion limit size
+# resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+# sys.setrecursionlimit(8192)
+resource.setrlimit(resource.RLIMIT_STACK, [0x10000000, resource.RLIM_INFINITY])
+sys.setrecursionlimit(0x100000)
+# setting recursion limit to infinity, requires root! can cause stack overflow!
+# resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
 
 class DirectedGraph(Graph):
@@ -34,10 +39,8 @@ class DirectedGraph(Graph):
         self._kosaraju_used = True
         rev_g = self.reversed_graph
         print("Reversed")
-        # some graphs start with 0, some (as in the input file) start with 1
-        start_el = self.starting_value(rev_g)
         # 1-st pass
-        for i in reversed(range(start_el, len(rev_g) + 1)):
+        for i in reversed(list(rev_g.keys())):
             if i not in self.explored:
                 self.s = i
                 self.dfs_loop(i, rev_g)
@@ -47,7 +50,7 @@ class DirectedGraph(Graph):
         # 2-nd pass
         self.explored = []
         self.ld = {}
-        for i in reversed(range(start_el, len(self.vertex) + 1)):
+        for i in reversed(list(self.f_t.keys())):
             cur_vertex = self.f_t[i]
             if cur_vertex not in self.explored:
                 self.s = cur_vertex
@@ -63,22 +66,10 @@ class DirectedGraph(Graph):
             self.t += 1
             self.f_t[self.t] = start_v
 
-    def reverse_graph(self):
-        reverted = []
-        s_v = self.starting_value(self.vertex)
-        for i in range(s_v, len(self.vertex) + 1):
-            temp = sorted(self.vertex[i])
-            reverted.append(self.vertex[i])
-            for j in range(len(temp)):
-                if temp[j] not in reverted:
-                    self.add_edge(temp[j], i)
-                    del temp[j]
-
     @property
     def reversed_graph(self):
         self._reversed_graph = {}
-        starting_el = self.starting_value(self.vertex)
-        for i in range(starting_el, len(self.vertex) + 1):
+        for i in list(self.vertex.keys()):
             for vtx in self.vertex[i]:
                 try:
                     self._reversed_graph[vtx].append(i)
@@ -97,17 +88,20 @@ class DirectedGraph(Graph):
                 if vtx2 not in self.vertex:
                     self.vertex[vtx2] = []
 
-
     def scc(self):
         # TODO: compute 5 SCC
         # you ned to run kosaraju algorithm first
         if not self._kosaraju_used:
             self.kosaraju()
         ffc = []
-        for i in range(self.starting_value(self.vertex), len(self.ld) + 1):
+        ffc_num = [0] * (len(self.vertex)+1)
+        for i in list(self.vertex.keys()):
+            ffc_num[self.ld[i]] += 1
             if self.ld[i] not in ffc:
                 ffc.append(self.ld[i])
-        return len(ffc)
+        ffc_num = sorted(ffc_num)
+        ffc_num.reverse()
+        return ffc_num[:5]
 
     @staticmethod
     def starting_value(graph):
@@ -137,17 +131,17 @@ if __name__ == "__main__":
     graph.add_edge(2, 8)
     graph.kosaraju()
     print("Time ", graph.f_t)
-    print("Number of fully connected componets is: ", graph.ffc())
+    print("Number of fully connected componets is: ", graph.scc())
 
     test_cases_path  = "./data/testCases/course2/assignment1SCC"
-    graph3 = DirectedGraph()
-    graph3.readGraphFromFile(os.path.join(test_cases_path, 'input_mostlyCycles_38_3200.txt'))
-    graph3.kosaraju()
-    print("Number of fully connected componets is: ", graph3.ffc())
-    # graph2 = DirectedGraph()
-    # graph2.readGraphFromFile('./data/SCC.txt')
-    # s_t = time.time()
-    # graph2.kosaraju()
-    # print("Number of fully connected componets is: ", graph2.ffc())
-    # print("Execution time: %.3f seconds" % (time.time() - s_t))
+    # graph3 = DirectedGraph()
+    # graph3.readGraphFromFile(os.path.join(test_cases_path, 'input_mostlyCycles_56_40000.txt'))
+    # graph3.kosaraju()
+    # print("Number of fully connected componets is: ", graph3.scc())
+    graph2 = DirectedGraph()
+    graph2.readGraphFromFile('./data/SCC.txt')
+    s_t = time.time()
+    graph2.kosaraju()
+    print("Number of fully connected componets is: ", graph2.ffc())
+    print("Execution time: %.3f seconds" % (time.time() - s_t))
 
