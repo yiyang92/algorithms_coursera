@@ -7,3 +7,8 @@
 *.iml
 out
 gen
+__pycache__/
+Would skip repository stanford-algs/
+### Java template
+# Compiled class file
+*.java
