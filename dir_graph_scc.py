@@ -1,8 +1,4 @@
-# TODO: implement directed graph class, implement BFS and DFS(recursive and with stack)
-# TODO: Your task is to code up the
-# algorithm from the video lectures for
-# computing strongly connected components (SCCs),
-# and to run this algorithm on the given graph.
+from __future__ import print_function
 
 import collections
 import time
@@ -13,8 +9,9 @@ import os
 
 from kargerMinCut import Graph
 # setting some finite recursion limit size
-# setting recursion limit to infinity, can cause stack overflow!
-resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+# setting recursion limit to infinity, can cause stack overflow! Doesnt work on Mac
+# TODO: add check operation system statement
+# resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
 
 class DirectedGraph(Graph):
@@ -31,6 +28,7 @@ class DirectedGraph(Graph):
         self.t = 0
         # check if kosaraju algorithm was used
         self._kosaraju_used = False
+        self.dist = []
 
     def kosaraju(self):
         self._kosaraju_used = True
@@ -65,14 +63,37 @@ class DirectedGraph(Graph):
             self.f_t[self.t] = start_v
 
     def dfs(self, start_v, graph):
+        # stack - LIFO
+        self.explored = [0] * (len(self.vertex) + 1)
         s = collections.deque()
         s.append(start_v)
         while s.count >= 1:
             v = s.pop()
-            if v not in self.explored:
-                self.explored.append(v)
+            if self.explored[v] != 1:
+                self.explored[v] = 1
                 for vtx in graph[v]:
                     s.append(vtx)
+
+    # used bfs to for computing shortest paths
+    def bfs_dist(self, start_v):
+        queue = collections.deque()
+        if start_v in self.vertex:
+            queue.append(start_v)
+        else:
+            print("Graph doesn`t contain selected starting vertex")
+            exit()
+        self.dist = [0] * (len(self.vertex) + 1)
+        self.explored = [0] * (len(self.vertex) + 1)
+        self.explored[start_v] = 1
+        # queue - FIFO
+        while len(queue) != 0:
+            u = queue.popleft()
+            print(u)
+            for edge in self.vertex[u]:
+                if self.explored[edge] == 0:
+                    self.explored[edge] = 1
+                    self.dist[edge] = self.dist[u] + 1
+                    queue.append(edge)
 
     @property
     def reversed_graph(self):
@@ -97,7 +118,6 @@ class DirectedGraph(Graph):
                     self.vertex[vtx2] = []
 
     def scc(self):
-        # TODO: compute 5 SCC
         # you ned to run kosaraju algorithm first
         if not self._kosaraju_used:
             print("using kosaraju")
@@ -138,17 +158,19 @@ if __name__ == "__main__":
     graph.kosaraju()
     print("Time ", graph.f_t)
     print("Number of fully connected componets is: ", graph.scc())
+    graph.bfs_dist(1)
+    print(graph.dist)
 
-    test_cases_path  = "./data/testCases/course2/assignment1SCC"
-    # graph3 = DirectedGraph()
-    # graph3.readGraphFromFile(os.path.join(test_cases_path, 'input_mostlyCycles_61_160000.txt'))
-    # graph3.kosaraju()
-    # print("Number of fully connected componets is: ", graph3.scc())
-    graph2 = DirectedGraph()
-    graph2.readGraphFromFile('./data/SCC.txt')
-    s_t = time.time()
     sys.setrecursionlimit(2 ** 16)
-    graph2.kosaraju()
-    print("Number of fully connected componets is: ", graph2.scc())
-    print("Execution time: %.3f seconds" % (time.time() - s_t))
+    test_cases_path  = "./data/testCases/course2/assignment1SCC"
+    graph3 = DirectedGraph()
+    graph3.readGraphFromFile(os.path.join(test_cases_path, 'input_mostlyCycles_61_160000.txt'))
+    graph3.kosaraju()
+    print("Number of fully connected componets is: ", graph3.scc())
+    # graph2 = DirectedGraph()
+    # graph2.readGraphFromFile('./data/SCC.txt')
+    # s_t = time.time()
+    # graph2.kosaraju()
+    # print("Number of fully connected componets is: ", graph2.scc())
+    # print("Execution time: %.3f seconds" % (time.time() - s_t))
 
